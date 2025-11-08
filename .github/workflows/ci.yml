@@ -18,7 +18,7 @@ jobs:
       - name: Configurar Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'  # Ajusta según la versión que uses
+          node-version: '20'  # Ajusta según la versión que uses
 
       - name: Instalar dependencias con Yarn
         run: yarn install
