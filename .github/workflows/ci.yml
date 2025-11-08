@@ -1,0 +1,35 @@
+name: CI - NestJS
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v3
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'  # Ajusta según la versión que uses
+
+      - name: Instalar dependencias con Yarn
+        run: yarn install
+
+      - name: Ejecutar pruebas con cobertura
+        run: yarn test:cov
+
+      - name: Subir cobertura a Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: true
