@@ -82,4 +82,45 @@ describe('LanguagesController', () => {
       expect(service.remove).toHaveBeenCalledWith('1');
     });
   });
+
+  describe('LanguagesController - cobertura adicional', () => {
+    it('debe propagar error del servicio en create', async () => {
+      service.create.mockRejectedValue(new Error('Error interno'));
+      await expect(controller.create({ name: 'Fail' })).rejects.toThrow('Error interno');
+    });
+
+    it('debe propagar error del servicio en findAll', async () => {
+      service.findAll.mockRejectedValue(new Error('Error interno'));
+      await expect(controller.findAll()).rejects.toThrow('Error interno');
+    });
+
+    it('debe propagar error del servicio en findOne', async () => {
+      service.findOne.mockRejectedValue(new Error('No encontrado'));
+      await expect(controller.findOne('999')).rejects.toThrow('No encontrado');
+    });
+
+    it('debe propagar error del servicio en update', async () => {
+      service.update.mockRejectedValue(new Error('Error al actualizar'));
+      await expect(controller.update('1', { name: 'Fail' })).rejects.toThrow('Error al actualizar');
+    });
+
+    it('debe propagar error del servicio en remove', async () => {
+      service.remove.mockRejectedValue(new Error('Error al eliminar'));
+      await expect(controller.remove('1')).rejects.toThrow('Error al eliminar');
+    });
+
+    it('debe manejar parámetros vacíos en findOne', async () => {
+      service.findOne.mockResolvedValue(mockLanguage);
+      const result = await controller.findOne('');
+      expect(result).toEqual(mockLanguage);
+      expect(service.findOne).toHaveBeenCalledWith('');
+    });
+
+    it('debe manejar body vacío en create', async () => {
+      service.create.mockResolvedValue(mockLanguage);
+      const result = await controller.create({} as any);
+      expect(result).toEqual(mockLanguage);
+      expect(service.create).toHaveBeenCalledWith({});
+    });
+  });
 });
