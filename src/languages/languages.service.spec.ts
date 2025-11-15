@@ -115,4 +115,20 @@ describe('LanguagesService', () => {
       await expect(service.remove('1')).rejects.toThrow(BusinessLogicException);
     });
   });
+
+  describe('LanguagesService - casos adicionales', () => {
+
+    it('debe lanzar Error si ocurre error en findOne (DB error)', async () => {
+      repository.findOne.mockRejectedValue(new Error('DB error'));
+      await expect(service.findOne('1')).rejects.toThrow(Error);
+      await expect(service.findOne('1')).rejects.toThrow('DB error');
+    });
+
+
+    it('debe lanzar BusinessLogicException si ocurre error en findAll (DB error)', async () => {
+      repository.find.mockRejectedValue(new Error('DB error'));
+      await expect(service.findAll()).rejects.toThrow(BusinessLogicException);
+    });
+  });
+
 });
