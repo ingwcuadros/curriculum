@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { TagTranslation } from "src/tags/entities/tag-translation.entity";
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class Language {
@@ -14,5 +15,10 @@ export class Language {
         unique: true,
     })
     code: string;
+
+
+    @OneToMany(() => TagTranslation, (translation) => translation.language)
+    translations: TagTranslation[];
+
 
 }

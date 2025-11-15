@@ -8,7 +8,7 @@ describe('LanguagesController', () => {
   let controller: LanguagesController;
   let service: jest.Mocked<LanguagesService>;
 
-  const mockLanguage = { id: '1', name: 'English', code: 'EN' };
+  const mockLanguage = { id: '1', name: 'English', code: 'EN', translations: [] };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -65,10 +65,10 @@ describe('LanguagesController', () => {
   describe('update', () => {
     it('debe actualizar el lenguaje', async () => {
       const dto: UpdateLanguageDto = { name: 'Spanish', code: 'ES' };
-      service.update.mockResolvedValue({ id: '1', name: 'Spanish', code: 'ES' });
+      service.update.mockResolvedValue({ id: '1', name: 'Spanish', code: 'ES', translations: [] });
 
       const result = await controller.update('1', dto);
-      expect(result).toEqual({ id: '1', name: 'Spanish', code: 'ES' });
+      expect(result).toEqual({ id: '1', name: 'Spanish', code: 'ES', translations: [] });
       expect(service.update).toHaveBeenCalledWith('1', dto);
     });
   });
@@ -86,7 +86,7 @@ describe('LanguagesController', () => {
   describe('LanguagesController - cobertura adicional', () => {
     it('debe propagar error del servicio en create', async () => {
       service.create.mockRejectedValue(new Error('Error interno'));
-      await expect(controller.create({ name: 'Fail' })).rejects.toThrow('Error interno');
+      await expect(controller.create({ name: 'Fail', code: 'FA' })).rejects.toThrow('Error interno');
     });
 
     it('debe propagar error del servicio en findAll', async () => {

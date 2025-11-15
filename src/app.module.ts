@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LanguagesModule } from './languages/languages.module';
+import { TagsModule } from './tags/tags.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { LanguagesModule } from './languages/languages.module';
       synchronize: true,
     }),
     LanguagesModule,
+    TagsModule,
   ],
   controllers: [],
   providers: [],
