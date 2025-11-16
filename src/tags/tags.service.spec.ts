@@ -108,4 +108,14 @@ describe('TagsService', () => {
     translationRepo.findOne.mockResolvedValue(null);
     await expect(service.deleteTranslation('trans-uuid')).rejects.toThrow(BusinessLogicException);
   });
+
+  it('should update translation without changes when dto is empty', async () => {
+    const translation = { id: 'trans-uuid', tag: { id: 'uuid' }, language: { code: 'es' }, name: 'Old', description: 'Old desc' } as any;
+    translationRepo.findOne.mockResolvedValue(translation);
+    translationRepo.save.mockResolvedValue(translation);
+    const result = await service.updateTranslationByTagAndLang('uuid', 'es', {});
+    expect(result.name).toBe('Old');
+    expect(result.description).toBe('Old desc');
+  });
+
 });

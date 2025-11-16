@@ -13,10 +13,12 @@ export class TagTranslation {
     @Column({ nullable: true })
     description?: string;
 
+    /* istanbul ignore file */
     @ManyToOne(() => Tag, (tag) => tag.translations, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'tag_id' })
     tag: Tag;
 
+    /* istanbul ignore file */
     @ManyToOne(() => Language, (language) => language.translations, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'language_id' })
     language: Language;

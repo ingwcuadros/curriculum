@@ -134,21 +134,4 @@ export class TagsService {
     if (!translation) throw new BusinessLogicException(`Translation ${id} not found`, HttpStatus.NOT_FOUND);
     await this.translationRepo.remove(translation);
   }
-
-
-  findAll() {
-    return `This action returns all tags`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} tag`;
-  }
-
-  update(id: number, updateTagDto: UpdateTranslationDto) {
-    return `This action updates a #${id} tag`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} tag`;
-  }
 }
