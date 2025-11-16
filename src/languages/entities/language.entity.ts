@@ -16,7 +16,6 @@ export class Language {
     })
     code: string;
 
-
     @OneToMany(() => TagTranslation, (translation) => translation.language)
     translations: TagTranslation[];
 

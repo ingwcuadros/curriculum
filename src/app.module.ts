@@ -19,6 +19,7 @@ import { TagsModule } from './tags/tags.module';
     }),
     LanguagesModule,
     TagsModule,
+
   ],
   controllers: [],
   providers: [],

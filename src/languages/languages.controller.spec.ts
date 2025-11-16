@@ -7,8 +7,8 @@ import { UpdateLanguageDto } from './dto/update-language.dto';
 describe('LanguagesController', () => {
   let controller: LanguagesController;
   let service: jest.Mocked<LanguagesService>;
-
   const mockLanguage = { id: '1', name: 'English', code: 'EN', translations: [] };
+
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -69,6 +69,7 @@ describe('LanguagesController', () => {
 
       const result = await controller.update('1', dto);
       expect(result).toEqual({ id: '1', name: 'Spanish', code: 'ES', translations: [] });
+
       expect(service.update).toHaveBeenCalledWith('1', dto);
     });
   });
@@ -87,6 +88,7 @@ describe('LanguagesController', () => {
     it('debe propagar error del servicio en create', async () => {
       service.create.mockRejectedValue(new Error('Error interno'));
       await expect(controller.create({ name: 'Fail', code: 'FA' })).rejects.toThrow('Error interno');
+
     });
 
     it('debe propagar error del servicio en findAll', async () => {
