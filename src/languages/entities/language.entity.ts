@@ -1,4 +1,4 @@
-import { TagTranslation } from "src/tags/entities/tag-translation.entity";
+import { TagTranslation } from "../../tags/entities/tag-translation.entity";
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
