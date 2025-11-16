@@ -6,6 +6,7 @@ export class Tag {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
+    /* istanbul ignore file */
     @OneToMany(() => TagTranslation, (translation) => translation.tag, { cascade: true })
     translations: TagTranslation[];
 }

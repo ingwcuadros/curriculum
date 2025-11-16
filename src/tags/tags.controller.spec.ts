@@ -80,4 +80,9 @@ describe('TagsController', () => {
     expect(result).toBeUndefined();
     expect(service.deleteTranslation).toHaveBeenCalledWith('trans-uuid');
   });
+  it('should call updateTranslationByTagAndLang with empty dto', async () => {
+    (service.updateTranslationByTagAndLang as jest.Mock).mockResolvedValue({ name: 'Old' });
+    const result = await controller.updateTranslationByTagAndLang('uuid', 'es', {});
+    expect(result).toEqual({ name: 'Old' });
+  });
 });

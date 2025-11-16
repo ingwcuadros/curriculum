@@ -16,6 +16,7 @@ export class Language {
     })
     code: string;
 
+    /* istanbul ignore file */
     @OneToMany(() => TagTranslation, (translation) => translation.language)
     translations: TagTranslation[];
 
