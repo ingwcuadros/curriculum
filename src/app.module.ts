@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LanguagesModule } from './languages/languages.module';
 import { TagsModule } from './tags/tags.module';
+import { CategoriesModule } from './categories/categories.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { TagsModule } from './tags/tags.module';
     }),
     LanguagesModule,
     TagsModule,
+    CategoriesModule,
 
   ],
   controllers: [],
