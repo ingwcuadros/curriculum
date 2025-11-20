@@ -125,4 +125,18 @@ describe('CategoriesService', () => {
     translationRepo.find.mockRejectedValue(new Error('DB error'));
     await expect(service.getCategoriesByLanguage('es')).rejects.toThrow(BusinessLogicException);
   });
+
+
+  it('should throw BusinessLogicException when createCategory fails inside try', async () => {
+    categoryRepo.create.mockReturnValue({ id: 'uuid', translations: [] } as Category);
+    categoryRepo.save.mockRejectedValue(new Error('DB error')); // Error dentro del try
+    await expect(service.createCategory({})).rejects.toThrow(BusinessLogicException);
+  })
+
+
+  it('should throw BusinessLogicException when getCategoriesByLanguage fails inside try', async () => {
+    translationRepo.find.mockRejectedValue(new Error('DB error')); // falla en find
+    await expect(service.getCategoriesByLanguage('es')).rejects.toThrow(BusinessLogicException);
+  });
+
 });

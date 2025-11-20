@@ -6,6 +6,7 @@
 /postgres_data
 /postgres
 .env
+/uploads
 
 # Logs
 logs

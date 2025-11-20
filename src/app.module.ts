@@ -4,6 +4,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { LanguagesModule } from './languages/languages.module';
 import { TagsModule } from './tags/tags.module';
 import { CategoriesModule } from './categories/categories.module';
+import { AcademicAchievementsModule } from './academic_achievements/academic_achievements.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
+
 
 @Module({
   imports: [
@@ -18,9 +22,16 @@ import { CategoriesModule } from './categories/categories.module';
       autoLoadEntities: true,
       synchronize: true,
     }),
+
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'),
+      serveRoot: '/uploads',
+    }),
+
     LanguagesModule,
     TagsModule,
     CategoriesModule,
+    AcademicAchievementsModule,
 
   ],
   controllers: [],

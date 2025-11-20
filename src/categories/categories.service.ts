@@ -21,7 +21,7 @@ export class CategoriesService {
   async createCategory(dto: CreateCategoryDto) {
     try {
       const category = this.categoryRepo.create();
-      return this.categoryRepo.save(category);
+      return await this.categoryRepo.save(category);
     } catch (error) {
       throw new BusinessLogicException(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
