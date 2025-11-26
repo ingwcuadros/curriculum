@@ -9,6 +9,7 @@ import { UpdateAcademicAchievementTranslationDto } from './dto/update-academic-a
 import type { Express } from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
+import { randomUUID } from 'crypto';
 //import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
 @Injectable()
@@ -103,6 +104,7 @@ export class AcademicAchievementsService {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
 
+    const uniqueName = `${randomUUID()}-${file.originalname}`;
     const filePath = path.join(uploadDir, file.originalname);
     await fs.promises.writeFile(filePath, file.buffer);
 
