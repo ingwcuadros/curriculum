@@ -7,6 +7,7 @@ import { CategoriesModule } from './categories/categories.module';
 import { AcademicAchievementsModule } from './academic_achievements/academic_achievements.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { BannersModule } from './banners/banners.module';
 
 
 @Module({
@@ -32,6 +33,7 @@ import { join } from 'path';
     TagsModule,
     CategoriesModule,
     AcademicAchievementsModule,
+    BannersModule,
 
   ],
   controllers: [],
