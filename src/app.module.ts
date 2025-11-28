@@ -8,6 +8,7 @@ import { AcademicAchievementsModule } from './academic_achievements/academic_ach
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { BannersModule } from './banners/banners.module';
+import { ArticlesModule } from './articles/articles.module';
 
 
 @Module({
@@ -34,6 +35,7 @@ import { BannersModule } from './banners/banners.module';
     CategoriesModule,
     AcademicAchievementsModule,
     BannersModule,
+    ArticlesModule,
 
   ],
   controllers: [],

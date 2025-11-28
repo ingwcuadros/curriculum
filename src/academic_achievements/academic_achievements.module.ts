@@ -4,7 +4,7 @@ import { AcademicAchievementsController } from './academic_achievements.controll
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AcademicAchievement } from './entities/academic_achievement.entity';
 import { AcademicAchievementTranslation } from './entities/academic-achievement-translation.entity';
-import { Language } from 'src/languages/entities/language.entity';
+import { Language } from '../languages/entities/language.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([AcademicAchievement, AcademicAchievementTranslation, Language])],
