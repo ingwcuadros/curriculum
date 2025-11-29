@@ -8,10 +8,9 @@ import { Language } from '../languages/entities/language.entity';
 import { Tag } from '../tags/entities/tag.entity';
 import { CreateBannerTranslationDto } from './dto/create-banner-translation.dto';
 import { UpdateBannerTranslationDto } from './dto/update-banner-translation.dto';
-import * as fs from 'fs';
-import * as path from 'path';
+import { StorageService } from "../comon/storage/storage.service"
+import { extractFileName } from '../comon/storage/file-path.helper';
 import { randomUUID } from 'crypto';
-//import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
 @Injectable()
 export class BannersService {
@@ -22,6 +21,7 @@ export class BannersService {
     @InjectRepository(BannerTranslation) private readonly translationRepo: Repository<BannerTranslation>,
     @InjectRepository(Language) private readonly languageRepo: Repository<Language>,
     @InjectRepository(Tag) private readonly tagRepo: Repository<Tag>,
+    private readonly storageService: StorageService,
   ) { }
 
   /** Crear banner vacío */
@@ -79,6 +79,7 @@ export class BannersService {
     if (!translation) throw new NotFoundException(`Translation not found`);
     return {
       id: translation.banner.id,
+      bannerId: translation.id,
       title: translation.title,
       textBanner: translation.textBanner,
       image: translation.banner.image,
@@ -107,22 +108,20 @@ export class BannersService {
     const banner = await this.bannerRepo.findOne({ where: { id } });
     if (!banner) throw new NotFoundException(`Banner ${id} not found`);
 
-    const uploadDir = path.join(process.cwd(), 'uploads', 'banners');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
+
+    if (banner.image) {
+      const oldFileName = extractFileName(banner.image);
+      if (oldFileName) {
+        await this.storageService.delete(oldFileName);
+      }
     }
-
+    // Generar nombre único para la nueva imagen
     const uniqueName = `${randomUUID()}-${file.originalname}`;
-    const filePath = path.join(uploadDir, uniqueName);
-    await fs.promises.writeFile(filePath, file.buffer);
-
-    banner.image = path.join('uploads', 'banners', uniqueName);
-
-    // Para producción con S3:
-    // const s3 = new S3Client({ region: process.env.AWS_REGION, credentials: { accessKeyId: process.env.AWS_ACCESS_KEY, secretAccessKey: process.env.AWS_SECRET_KEY } });
-    // await s3.send(new PutObjectCommand({ Bucket: process.env.AWS_BUCKET, Key: `banners/${uniqueName}`, Body: file.buffer }));
-    // banner.image = `banners/${uniqueName}`;
-
+    file.originalname = uniqueName; // Sobrescribimos para que el StorageService lo use
+    // Subir la nueva imagen (local o S3 según STORAGE_DRIVER)
+    const newImagePath = await this.storageService.upload(file);
+    // Actualizar el banner con la nueva ruta
+    banner.image = newImagePath;
     return this.bannerRepo.save(banner);
   }
 

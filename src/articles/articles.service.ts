@@ -11,10 +11,10 @@ import { CreateArticleDto } from './dto/create-article.dto';
 import { CreateArticleTranslationDto } from './dto/create-article-translation.dto';
 import { UpdateArticleTranslationDto } from './dto/update-article-translation.dto';
 import { BusinessLogicException } from '../shared/errors/business-errors';
-import * as fs from 'fs';
-import * as path from 'path';
+import { StorageService } from "../comon/storage/storage.service"
+import { extractFileName } from '../comon/storage/file-path.helper';
 import { randomUUID } from 'crypto';
-//import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+
 
 @Injectable()
 export class ArticlesService {
@@ -26,6 +26,7 @@ export class ArticlesService {
     @InjectRepository(Language) private readonly languageRepo: Repository<Language>,
     @InjectRepository(Tag) private readonly tagRepo: Repository<Tag>,
     @InjectRepository(Category) private readonly categoryRepo: Repository<Category>,
+    private readonly storageService: StorageService,
   ) { }
 
   async createArticle(dto: CreateArticleDto) {
@@ -122,22 +123,18 @@ export class ArticlesService {
     const article = await this.articleRepo.findOne({ where: { id } });
     if (!article) throw new BusinessLogicException(`Article ${id} not found`, HttpStatus.NOT_FOUND);
 
-    const uploadDir = path.join(process.cwd(), 'uploads', 'articles');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
+    if (article.image) {
+      const oldFileName = extractFileName(article.image);
+      if (oldFileName) {
+        await this.storageService.delete(oldFileName);
+      }
     }
 
     const uniqueName = `${randomUUID()}-${file.originalname}`;
-    const filePath = path.join(uploadDir, uniqueName);
-    await fs.promises.writeFile(filePath, file.buffer);
-
-    article.image = path.join('uploads', 'articles', uniqueName);
-
-    // Para S3:
-    // const s3 = new S3Client({ region: process.env.AWS_REGION, credentials: { accessKeyId: process.env.AWS_ACCESS_KEY, secretAccessKey: process.env.AWS_SECRET_KEY } });
-    // await s3.send(new PutObjectCommand({ Bucket: process.env.AWS_BUCKET, Key: `articles/${uniqueName}`, Body: file.buffer }));
-    // article.image = `articles/${uniqueName}`;
-
+    file.originalname = uniqueName; // Sobrescribimos para que el StorageService lo use
+    // Subir la nueva imagen (local o S3 según STORAGE_DRIVER)
+    const newImagePath = await this.storageService.upload(file);
+    article.image = newImagePath;
     return this.articleRepo.save(article);
   }
 
