@@ -7,9 +7,10 @@ import { Language } from '../languages/entities/language.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Tag } from '../tags/entities/tag.entity';
 import { Category } from '../categories/entities/category.entity';
+import { StorageModule } from '../comon/storage/storage.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Article, ArticleTranslation, Language, Tag, Category])],
+  imports: [TypeOrmModule.forFeature([Article, ArticleTranslation, Language, Tag, Category]), StorageModule],
   controllers: [ArticlesController],
   providers: [ArticlesService],
 })

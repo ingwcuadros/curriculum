@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LanguagesModule } from './languages/languages.module';
 import { TagsModule } from './tags/tags.module';
@@ -9,20 +9,29 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { BannersModule } from './banners/banners.module';
 import { ArticlesModule } from './articles/articles.module';
+import { ExperiencesModule } from './experiences/experiences.module';
+
+
+
 
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: process.env.DB_HOST,
-      port: Number.parseInt(process.env.DB_PORT ?? '6432', 10),
-      username: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
-      autoLoadEntities: true,
-      synchronize: true,
+
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        type: 'postgres',
+        host: config.get('DB_HOST'),
+        port: config.get('DB_PORT'),
+        username: config.get('DB_USER'),
+        password: config.get('DB_PASSWORD'),
+        database: config.get('DB_NAME'),
+        autoLoadEntities: true,
+        synchronize: true, // ⚠️ Solo en desarrollo
+      }),
     }),
 
     ServeStaticModule.forRoot({
@@ -36,6 +45,7 @@ import { ArticlesModule } from './articles/articles.module';
     AcademicAchievementsModule,
     BannersModule,
     ArticlesModule,
+    ExperiencesModule,
 
   ],
   controllers: [],

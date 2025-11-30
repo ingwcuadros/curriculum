@@ -6,11 +6,13 @@ import { AcademicAchievementTranslation } from './entities/academic-achievement-
 import { Language } from '../languages/entities/language.entity';
 import { CreateAcademicAchievementTranslationDto } from './dto/create-academic-achievement-translation.dto';
 import { UpdateAcademicAchievementTranslationDto } from './dto/update-academic-achievement-translation.dto';
+import { StorageService } from "../comon/storage/storage.service"
+import { extractFileName } from '../comon/storage/file-path.helper';
 import type { Express } from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
 import { randomUUID } from 'crypto';
-//import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+
 
 @Injectable()
 export class AcademicAchievementsService {
@@ -20,6 +22,7 @@ export class AcademicAchievementsService {
     @InjectRepository(AcademicAchievement) private readonly achievementRepo: Repository<AcademicAchievement>,
     @InjectRepository(AcademicAchievementTranslation) private readonly translationRepo: Repository<AcademicAchievementTranslation>,
     @InjectRepository(Language) private readonly languageRepo: Repository<Language>,
+    private readonly storageService: StorageService,
   ) { }
 
   async createAchievement() {
@@ -71,7 +74,7 @@ export class AcademicAchievementsService {
     if (!translation) throw new NotFoundException(`Translation not found`);
     return {
       id: translation.academicAchievement.id,
-      academicAchievementId: translation.academicAchievement.id,
+      academicAchievementId: translation.id,
       title: translation.title,
       content: translation.content,
       image: translation.academicAchievement.image,
@@ -97,26 +100,19 @@ export class AcademicAchievementsService {
     if (!achievement) throw new NotFoundException(`Achievement ${id} not found`);
 
 
-    const uploadDir = path.join(process.cwd(), 'uploads', 'images');
-
-    // Crear carpeta si no existe
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
+    if (achievement.image) {
+      const oldFileName = extractFileName(achievement.image);
+      if (oldFileName) {
+        await this.storageService.delete(oldFileName);
+      }
     }
 
+    // Generar nombre único para la nueva imagen
     const uniqueName = `${randomUUID()}-${file.originalname}`;
-    const filePath = path.join(uploadDir, file.originalname);
-    await fs.promises.writeFile(filePath, file.buffer);
-
-    // Guardar solo el path relativo en DB
-    achievement.image = path.join('uploads', 'images', file.originalname);
-
-
-    // Para producción con S3:
-    // const s3 = new S3Client({ region: process.env.AWS_REGION, credentials: { accessKeyId: process.env.AWS_ACCESS_KEY, secretAccessKey: process.env.AWS_SECRET_KEY } });
-    // await s3.send(new PutObjectCommand({ Bucket: process.env.AWS_BUCKET, Key: `academic-achievements/${file.originalname}`, Body: file.buffer }));
-    // achievement.image = `academic-achievements/${file.originalname}`; // Guardamos solo el Key
-
+    file.originalname = uniqueName; // Sobrescribimos para que el StorageService lo use
+    // Subir la nueva imagen (local o S3 según STORAGE_DRIVER)
+    const newImagePath = await this.storageService.upload(file);
+    achievement.image = newImagePath;
     return this.achievementRepo.save(achievement);
   }
 }
