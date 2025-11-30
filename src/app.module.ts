@@ -25,7 +25,7 @@ import { ExperiencesModule } from './experiences/experiences.module';
       useFactory: (config: ConfigService) => ({
         type: 'postgres',
         host: config.get('DB_HOST'),
-        port: 6432,
+        port: config.get('DB_PORT'),
         username: config.get('DB_USER'),
         password: config.get('DB_PASSWORD'),
         database: config.get('DB_NAME'),

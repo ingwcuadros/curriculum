@@ -1,17 +1,15 @@
 
-version: '3.8'
-
 services:
   api:
     build: .
-    container_name: nestjs_api
+    container_name: cv_api
     restart: always
     ports:
-      - "4000:3000"
+      - "3000:3000"
     env_file:
       - .env
     volumes:
-      - ./uploads:/app/uploads  # Volumen para imágenes
+      - uploads_volume:/app/uploads  # Volumen para imágenes
     depends_on:
       - db
 
@@ -30,3 +28,4 @@ services:
 
 volumes:
   postgres_volume:
+  uploads_volume:
