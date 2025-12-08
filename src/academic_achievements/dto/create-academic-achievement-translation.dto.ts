@@ -16,4 +16,8 @@ export class CreateAcademicAchievementTranslationDto {
     @IsString()
     @IsNotEmpty()
     content: string;
+
+    @IsString()
+    @IsNotEmpty()
+    altImage: string;
 }

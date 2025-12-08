@@ -6,6 +6,7 @@ import { CreateArticleTranslationDto } from './dto/create-article-translation.dt
 import { UpdateArticleTranslationDto } from './dto/update-article-translation.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Express } from 'express';
+import { GetPaginatedArticlesDto } from './dto/get-paginated-articles.dto';
 
 @Controller('articles')
 export class ArticlesController {
@@ -31,9 +32,14 @@ export class ArticlesController {
     return this.service.getArticlesByLanguage(lang);
   }
 
-  @Get('/:id')
-  getArticleWithTranslation(@Param('id') id: string, @Query('lang') lang: string) {
-    return this.service.getArticleWithTranslation(id, lang);
+  @Get('paginated')
+  async getPaginated(@Query() query: GetPaginatedArticlesDto) {
+    return this.service.getPaginatedArticles(query);
+  }
+
+  @Get('/:identifier')
+  getArticleWithTranslation(@Param('identifier') identifier: string, @Query('lang') lang: string) {
+    return this.service.getArticleWithTranslation(identifier, lang);
   }
 
   @Put('translations/:id')
@@ -61,4 +67,8 @@ export class ArticlesController {
   removeTagFromTranslation(@Param('id') id: string, @Param('tagId') tagId: string) {
     return this.service.removeTagFromTranslation(id, tagId);
   }
+
+
+
+
 }

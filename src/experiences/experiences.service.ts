@@ -13,6 +13,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { randomUUID } from 'crypto';
 import { UpdateExperienceTranslationDto } from './dto/update-experience-translation.dto';
+import { url } from 'inspector';
 
 @Injectable()
 export class ExperiencesService {
@@ -72,12 +73,33 @@ export class ExperiencesService {
   }
 
   async getExperienceWithTranslation(id: string, lang: string) {
-    const translation = await this.translationRepo.findOne({
-      where: {
-        experience: { id },
-        language: { code: lang },
-      },
-      relations: ['experience'],
+    const qb = this.translationRepo.createQueryBuilder('translation')
+      .leftJoinAndSelect('translation.experience', 'experience')
+      .leftJoinAndSelect('experience.articles', 'articles')
+      .leftJoinAndSelect('articles.translations', 'articleTranslations')
+      .leftJoinAndSelect('articleTranslations.language', 'articleLanguage')
+      .leftJoinAndSelect('articleTranslations.tags', 'articleTags')
+      .leftJoinAndSelect('articleTags.translations', 'tagTranslation')
+      .leftJoinAndSelect('tagTranslation.language', 'languageTag')
+      .leftJoinAndSelect('translation.language', 'language')
+      .where('experience.id = :id', { id })
+      .andWhere('language.code = :lang', { lang });
+
+    const translation = await qb.getOne();
+    const articlesTranslations = translation?.experience.articles.map(article => {
+      const articleTranslation = article.translations.find(at => at.language.code === lang);
+      const tagsTranslations = articleTranslation?.tags.map(tag => {
+        const tagTranslation = tag.translations.find(tt => tt.language.code === lang);
+        return tagTranslation ? tagTranslation.name : null;
+      }).filter(name => name !== null);
+
+      return {
+        id: article.id,
+        title: articleTranslation ? articleTranslation.titulo : null,
+        url: articleTranslation ? articleTranslation.url : null,
+        content: articleTranslation ? articleTranslation.content : null,
+        tags: tagsTranslations,
+      };
     });
     if (!translation) throw new BusinessLogicException(`Translation for Experience ${id} in language ${lang} not found`, HttpStatus.NOT_FOUND);
     return {
@@ -85,6 +107,7 @@ export class ExperiencesService {
       experienceId: translation.id,
       title: translation.title,
       content: translation.content,
+      articles: articlesTranslations,
     };
   }
 

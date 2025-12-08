@@ -13,6 +13,9 @@ export class AcademicAchievementTranslation {
     @Column()
     content: string;
 
+    @Column({ name: 'alt_image', nullable: true })
+    altImage: string;
+
     @ManyToOne(() => AcademicAchievement, a => a.translations, { onDelete: 'CASCADE' })
     academicAchievement: AcademicAchievement;
 

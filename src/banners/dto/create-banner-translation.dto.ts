@@ -17,4 +17,8 @@ export class CreateBannerTranslationDto {
     @IsString()
     @IsNotEmpty()
     textBanner: string;
+
+    @IsString()
+    @IsNotEmpty()
+    altImage: string;
 }

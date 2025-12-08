@@ -62,6 +62,7 @@ export class AcademicAchievementsService {
       id: t.academicAchievement.id,
       title: t.title,
       content: t.content,
+      altImage: t.altImage,
       image: t.academicAchievement.image, // path relativo
     }));
   }
@@ -77,6 +78,7 @@ export class AcademicAchievementsService {
       academicAchievementId: translation.id,
       title: translation.title,
       content: translation.content,
+      altImage: translation.altImage,
       image: translation.academicAchievement.image,
     };
   }

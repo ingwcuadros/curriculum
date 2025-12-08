@@ -66,24 +66,36 @@ export class BannersService {
       title: t.title,
       textBanner: t.textBanner,
       image: t.banner.image,
+      altImage: t.altImage,
       tags: t.banner.tags,
     }));
   }
 
   /** Obtener banner con traducción */
   async getBannerWithTranslation(id: string, lang: string) {
-    const translation = await this.translationRepo.findOne({
-      where: { banner: { id }, language: { code: lang } },
-      relations: ['banner'],
-    });
+
+    const qb = this.translationRepo.createQueryBuilder('translation')
+      .leftJoinAndSelect('translation.banner', 'banner')
+      .leftJoinAndSelect('translation.language', 'translationLang')
+      .leftJoinAndSelect('banner.tags', 'tags')
+      .leftJoinAndSelect('tags.translations', 'tagTranslations')
+      .leftJoinAndSelect('tagTranslations.language', 'tagLang')
+      .where('translation.banner.id = :id', { id })
+      .andWhere('translationLang.code = :lang', { lang });
+    const translation = await qb.getOne();
     if (!translation) throw new NotFoundException(`Translation not found`);
+    const tagTranslations = translation.banner.tags.map(tag => {
+      const tagTranslation = tag.translations.find(tt => tt.language.code === lang);
+      return tagTranslation ? tagTranslation.name : null;
+    }).filter(name => name !== null);
     return {
       id: translation.banner.id,
       bannerId: translation.id,
       title: translation.title,
       textBanner: translation.textBanner,
+      altImage: translation.altImage,
       image: translation.banner.image,
-      tags: translation.banner.tags,
+      tags: tagTranslations
     };
   }
 

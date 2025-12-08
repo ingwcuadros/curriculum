@@ -9,4 +9,8 @@ export class UpdateBannerTranslationDto {
     @IsOptional()
     @IsString()
     textBanner?: string;
+
+    @IsOptional()
+    @IsString()
+    altImage?: string;
 }

@@ -8,4 +8,8 @@ export class UpdateAcademicAchievementTranslationDto {
     @IsOptional()
     @IsString()
     content?: string;
+
+    @IsString()
+    @IsOptional()
+    altImage?: string;
 }

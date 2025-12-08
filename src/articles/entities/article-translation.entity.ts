@@ -12,8 +12,14 @@ export class ArticleTranslation {
     @Column({ name: 'titulo' })
     titulo: string;
 
-    @Column({ name: 'content', type: 'text' })
+    @Column({ name: 'url', unique: true, nullable: true })
+    url: string;
+
+    @Column({ name: 'content', type: 'text', })
     content: string;
+
+    @Column({ name: 'alt_image', nullable: true })
+    altImage: string;
 
     @Column({ name: 'auxilary_content', type: 'text', nullable: true })
     auxiliaryContent: string;
