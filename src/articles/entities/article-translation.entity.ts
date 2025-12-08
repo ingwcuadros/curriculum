@@ -18,6 +18,9 @@ export class ArticleTranslation {
     @Column({ name: 'content', type: 'text', })
     content: string;
 
+    @Column({ name: 'alt_image', nullable: true })
+    altImage: string;
+
     @Column({ name: 'auxilary_content', type: 'text', nullable: true })
     auxiliaryContent: string;
 

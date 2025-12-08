@@ -13,6 +13,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { randomUUID } from 'crypto';
 import { UpdateExperienceTranslationDto } from './dto/update-experience-translation.dto';
+import { url } from 'inspector';
 
 @Injectable()
 export class ExperiencesService {
@@ -95,6 +96,7 @@ export class ExperiencesService {
       return {
         id: article.id,
         title: articleTranslation ? articleTranslation.titulo : null,
+        url: articleTranslation ? articleTranslation.url : null,
         content: articleTranslation ? articleTranslation.content : null,
         tags: tagsTranslations,
       };

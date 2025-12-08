@@ -18,6 +18,10 @@ export class CreateArticleTranslationDto {
     @IsNotEmpty()
     content: string;
 
+    @IsString()
+    @IsNotEmpty()
+    altImage: string;
+
     @IsOptional()
     @IsString()
     auxiliaryContent?: string;

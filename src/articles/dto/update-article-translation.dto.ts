@@ -12,6 +12,10 @@ export class UpdateArticleTranslationDto {
 
     @IsOptional()
     @IsString()
+    altImage?: string;
+
+    @IsOptional()
+    @IsString()
     auxiliaryContent?: string;
 
     @IsOptional()

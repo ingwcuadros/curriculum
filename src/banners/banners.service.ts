@@ -66,6 +66,7 @@ export class BannersService {
       title: t.title,
       textBanner: t.textBanner,
       image: t.banner.image,
+      altImage: t.altImage,
       tags: t.banner.tags,
     }));
   }
