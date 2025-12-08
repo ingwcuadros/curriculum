@@ -228,6 +228,7 @@ export class ArticlesService {
       'article.id AS article_id',
       'article.image AS article_image',
       'translation.titulo AS translation_titulo',
+      'translation.url AS translation_url',
       'translation.content AS translation_content',
       'translation.auxiliaryContent AS translation_auxiliary_content',
       'translation.fecha AS translation_fecha',
@@ -244,6 +245,7 @@ export class ArticlesService {
     const items = rawResults.map(row => ({
       id: row.article_id,
       titulo: row.translation_titulo,
+      url: row.translation_url,
       content: row.translation_content,
       auxiliaryContent: row.translation_auxiliary_content,
       fecha: row.translation_fecha,

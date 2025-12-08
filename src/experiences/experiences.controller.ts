@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Put, Query } from '@nestjs/common';
 import { ExperiencesService } from './experiences.service';
 import { CreateExperienceTranslationDto } from './dto/create-experience-translation.dto';
 import { UpdateExperienceTranslationDto } from './dto/update-experience-translation.dto';
@@ -29,7 +29,7 @@ export class ExperiencesController {
   }
 
   @Get('/:id')
-  getExperienceWithTranslation(@Param('id') id: string, @Param('lang') lang: string) {
+  getExperienceWithTranslation(@Param('id') id: string, @Query('lang') lang: string) {
     return this.experiencesService.getExperienceWithTranslation(id, lang);
   }
 

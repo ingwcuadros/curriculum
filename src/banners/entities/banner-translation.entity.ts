@@ -15,6 +15,9 @@ export class BannerTranslation {
     @Column({ name: 'text_banner' })
     textBanner: string;
 
+    @Column({ name: 'alt_image', nullable: true })
+    altImage: string;
+
     @ManyToOne(() => Banner, b => b.translations, { onDelete: 'CASCADE' })
     banner: Banner;
 
