@@ -10,6 +10,7 @@ import { join } from 'path';
 import { BannersModule } from './banners/banners.module';
 import { ArticlesModule } from './articles/articles.module';
 import { ExperiencesModule } from './experiences/experiences.module';
+import { PdfModule } from './pdf/pdf.module';
 
 
 
@@ -46,6 +47,7 @@ import { ExperiencesModule } from './experiences/experiences.module';
     BannersModule,
     ArticlesModule,
     ExperiencesModule,
+    PdfModule,
 
   ],
   controllers: [],
