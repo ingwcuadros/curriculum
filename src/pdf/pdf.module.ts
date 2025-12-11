@@ -12,4 +12,4 @@ import { StorageModule } from '../comon/storage/storage.module';
   controllers: [PdfController],
   providers: [PdfService],
 })
-export class PdfModule { }
+export class PdfModule { } 
