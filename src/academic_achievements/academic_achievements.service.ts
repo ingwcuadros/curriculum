@@ -77,9 +77,7 @@ export class AcademicAchievementsService {
       id: translation.academicAchievement.id,
       academicAchievementId: translation.id,
       title: translation.title,
-      content: translation.content,
-      altImage: translation.altImage,
-      image: translation.academicAchievement.image,
+      content: translation.content
     };
   }
 

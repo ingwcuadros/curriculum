@@ -11,6 +11,10 @@ import { BannersModule } from './banners/banners.module';
 import { ArticlesModule } from './articles/articles.module';
 import { ExperiencesModule } from './experiences/experiences.module';
 import { PdfModule } from './pdf/pdf.module';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
+import { RedisModule } from './redis/redis.module';
+import typeorm from './config/typeorm';
 
 
 
@@ -18,7 +22,11 @@ import { PdfModule } from './pdf/pdf.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [typeorm]
+    }
+    ),
 
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -31,7 +39,7 @@ import { PdfModule } from './pdf/pdf.module';
         password: config.get('DB_PASSWORD'),
         database: config.get('DB_NAME'),
         autoLoadEntities: true,
-        synchronize: true, // ⚠️ Solo en desarrollo
+        synchronize: false,
       }),
     }),
 
@@ -48,6 +56,9 @@ import { PdfModule } from './pdf/pdf.module';
     ArticlesModule,
     ExperiencesModule,
     PdfModule,
+    UsersModule,
+    AuthModule,
+    RedisModule,
 
   ],
   controllers: [],

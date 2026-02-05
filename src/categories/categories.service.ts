@@ -57,10 +57,8 @@ export class CategoriesService {
       });
 
       return translations.map(t => ({
-        categoryId: t.category.id,
-        name: t.name,
-        description: t.description,
-        language: t.language.code,
+        id: t.category.id,
+        name: t.name
       }));
     } catch (error) {
       this.logger.error(error)

@@ -14,11 +14,11 @@ export class StorageService {
             : new LocalStorage();
     }
 
-    upload(file: Express.Multer.File): Promise<string> {
-        return this.driver.upload(file);
+    upload(file: Express.Multer.File, isPdf?: boolean): Promise<string> {
+        return this.driver.upload(file, isPdf);
     }
 
-    delete(filePath: string): Promise<void> {
-        return this.driver.delete(filePath);
+    delete(filePath: string, isPdf?: boolean): Promise<void> {
+        return this.driver.delete(filePath, isPdf);
     }
 }

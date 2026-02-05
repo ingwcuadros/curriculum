@@ -73,6 +73,16 @@ export class ExperiencesService {
   }
 
   async getExperienceWithTranslation(id: string, lang: string) {
+
+
+    const formatYearMonth = (date?: Date | string): string | null => {
+      if (!date) return null;
+      const d = typeof date === 'string' ? new Date(date) : date;
+      if (isNaN(d.getTime())) return null;
+      return d.toISOString().slice(0, 7);
+    };
+
+
     const qb = this.translationRepo.createQueryBuilder('translation')
       .leftJoinAndSelect('translation.experience', 'experience')
       .leftJoinAndSelect('experience.articles', 'articles')
@@ -93,11 +103,17 @@ export class ExperiencesService {
         return tagTranslation ? tagTranslation.name : null;
       }).filter(name => name !== null);
 
+
+      const inicio = formatYearMonth(articleTranslation?.fecha);
+      const fin = formatYearMonth(articleTranslation?.fechaEnd);
+
       return {
         id: article.id,
         title: articleTranslation ? articleTranslation.titulo : null,
         url: articleTranslation ? articleTranslation.url : null,
         content: articleTranslation ? articleTranslation.content : null,
+        period: inicio && fin ? `${inicio} - ${fin}` : inicio || fin || '',
+        auxiliaryContent: articleTranslation ? articleTranslation.auxiliaryContent : null,
         tags: tagsTranslations,
       };
     });

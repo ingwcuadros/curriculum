@@ -13,4 +13,8 @@ export class UpdateBannerTranslationDto {
     @IsOptional()
     @IsString()
     altImage?: string;
+
+    @IsOptional()
+    @IsString()
+    role?: string;
 }

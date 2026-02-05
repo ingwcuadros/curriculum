@@ -15,6 +15,22 @@ import { StorageService } from "../comon/storage/storage.service"
 import { extractFileName } from '../comon/storage/file-path.helper';
 import { GetPaginatedArticlesDto } from './dto/get-paginated-articles.dto';
 import { randomUUID } from 'crypto';
+import { RedisService } from '../redis/redis.service';
+
+
+export interface SitemapItem {
+  path: string;      // "/es/slug" o "/es"
+  lastmod?: string;  // ISO date string
+  type: 'home' | 'article';
+}
+
+// helper opcional para convertir fecha a ISO
+const toIsoDateString = (date?: Date | string | null): string | undefined => {
+  if (!date) return undefined;
+  if (date instanceof Date) return date.toISOString();
+  const d = new Date(date); // si viene como string
+  return isNaN(d.getTime()) ? undefined : d.toISOString();
+};
 
 
 @Injectable()
@@ -28,6 +44,7 @@ export class ArticlesService {
     @InjectRepository(Tag) private readonly tagRepo: Repository<Tag>,
     @InjectRepository(Category) private readonly categoryRepo: Repository<Category>,
     private readonly storageService: StorageService,
+    private readonly redisService: RedisService
   ) { }
 
   async createArticle(dto: CreateArticleDto) {
@@ -37,12 +54,14 @@ export class ArticlesService {
       if (!category) throw new BusinessLogicException(`Category ${dto.categoryId} not found`, HttpStatus.NOT_FOUND);
       article.category = category;
     }
+    await this.invalidateListArticlesChange();
     return this.articleRepo.save(article);
   }
 
   async deleteArticle(id: string) {
     const article = await this.articleRepo.findOne({ where: { id } });
     if (!article) throw new BusinessLogicException(`Article ${id} not found`, HttpStatus.NOT_FOUND);
+    await this.invalidateListArticlesChange();
     await this.articleRepo.remove(article);
   }
 
@@ -66,6 +85,7 @@ export class ArticlesService {
       article,
       language,
     });
+    await this.invalidateArticleChange(url);
     return this.translationRepo.save(translation);
   }
 
@@ -116,7 +136,7 @@ export class ArticlesService {
     const translation = await qb.getOne();
 
     if (!translation) {
-      throw new BusinessLogicException(`Translation not found`, HttpStatus.NOT_FOUND);
+      throw new BusinessLogicException(`Article not found`, HttpStatus.NOT_FOUND);
     }
 
     const categoryTranslation = translation.article.category.translations.find(t => t.language.code === lang);
@@ -132,9 +152,7 @@ export class ArticlesService {
       url: translation.url,
       content: translation.content,
       auxiliaryContent: translation.auxiliaryContent,
-      altImage: translation.altImage,
       fecha: translation.fecha,
-      fechaEnd: translation.fechaEnd,
       promo: translation.promo,
       image: translation.article.image,
       categoria: categoryTranslation ? categoryTranslation.name : null,
@@ -153,6 +171,8 @@ export class ArticlesService {
     }
 
     Object.assign(translation, dto);
+    await this.invalidateArticleChange(translation.url);
+    await this.invalidateListArticlesChange();
     return this.translationRepo.save(translation);
   }
 
@@ -178,6 +198,7 @@ export class ArticlesService {
     // Subir la nueva imagen (local o S3 según STORAGE_DRIVER)
     const newImagePath = await this.storageService.upload(file);
     article.image = newImagePath;
+    await this.invalidateListArticlesChange();
     return this.articleRepo.save(article);
   }
 
@@ -237,27 +258,41 @@ export class ArticlesService {
       'translation.auxiliaryContent AS translation_auxiliary_content',
       'translation.fecha AS translation_fecha',
       'translation.fechaEnd AS translation_fecha_end',
-      'translation.promo AS translation_promo'
+      'translation.promo AS translation_promo',
+      'categoryTranslation.name AS category_name',
+      'tagTranslation.name AS tag_name',
     ]);
 
     qb.skip((page - 1) * limit).take(limit);
 
+
     const rawResults = await qb.getRawMany();
     const total = await qb.getCount();
 
-    // Mapear resultados usando alias correctos
-    const items = rawResults.map(row => ({
-      id: row.article_id,
-      titulo: row.translation_titulo,
-      url: row.translation_url,
-      content: row.translation_content,
-      altImage: row.translation_alt_image,
-      auxiliaryContent: row.translation_auxiliary_content,
-      fecha: row.translation_fecha,
-      fechaEnd: row.translation_fecha_end,
-      promo: row.translation_promo,
-      image: row.article_image
-    }));
+    const grouped = rawResults.reduce((acc, row) => {
+      if (!acc[row.article_id]) {
+        acc[row.article_id] = {
+          id: row.article_id,
+          titulo: row.translation_titulo,
+          url: row.translation_url,
+          content: row.translation_content,
+          altImage: row.translation_alt_image,
+          auxiliaryContent: row.translation_auxiliary_content,
+          fecha: row.translation_fecha,
+          fechaEnd: row.translation_fecha_end,
+          promo: row.translation_promo,
+          image: row.article_image,
+          category: row.category_name,
+          tags: [],
+        };
+      }
+      if (row.tag_name) {
+        acc[row.article_id].tags.push(row.tag_name);
+      }
+      return acc;
+    }, {});
+
+    const items = Object.values(grouped);
 
     return {
       items,
@@ -286,7 +321,71 @@ export class ArticlesService {
     return slug;
   }
 
+  async getArticlesProjectsByLanguage(lang: string) {
 
 
+    const translations = await this.translationRepo.find({
+      where: { language: { code: lang } },
+      relations: ['article'],
+      order: {
+        fechaEnd: 'DESC', // ⬅️ Ordena por la fecha más reciente
+      },
+      take: 3, // ⬅️ Limita a 3 resultados
+    });
 
+    return translations.map(t => ({
+      id: t.article.id,
+      title: t.titulo,
+      url: t.url,
+      content: t.content,
+      altImage: t.altImage,
+      auxiliaryContent: t.auxiliaryContent,
+      image: t.article.image,
+    }));
+  }
+
+
+  async getSitemapItemsByLanguage(lang: string) {
+    const translations = await this.translationRepo.find({
+      where: { language: { code: lang } },
+      relations: ['article'],
+      order: {
+        fechaEnd: 'DESC',
+      },
+    });
+    const articleItems: SitemapItem[] = translations.map(t => {
+      const slug = t.url;
+      const path = `/${lang}/${slug}`;
+      return {
+        path,
+        lastmod: toIsoDateString(t.fecha),
+        type: 'article',
+      };
+    });
+    const homeItem: SitemapItem = {
+      path: `/${lang}`,
+      lastmod: new Date().toISOString(),
+      type: 'home',
+    };
+    return [homeItem, ...articleItems];
+  }
+
+
+  /**
+   * Estrategia central de invalidación:
+   * - Borra cache del listado
+   * - Borra cache del detalle del producto afectado
+   */
+  private async invalidateListArticlesChange(): Promise<void> {
+
+    // Invalidar todos los paginados
+    await this.redisService.deleteByPattern('articles:paginated:*');
+
+    await this.redisService.deleteByPattern('articles:limited:*');
+
+  }
+
+  private async invalidateArticleChange(articleId: number | string): Promise<void> {
+    await this.redisService.deleteByPattern(`articles:id:${articleId}:*`);
+  }
 }
