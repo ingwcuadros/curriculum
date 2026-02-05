@@ -28,20 +28,21 @@ import typeorm from './config/typeorm';
     }
     ),
 
+
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         type: 'postgres',
-        host: config.get('DB_HOST'),
-        port: config.get('DB_PORT'),
-        username: config.get('DB_USER'),
-        password: config.get('DB_PASSWORD'),
-        database: config.get('DB_NAME'),
+        url: process.env.DB_URL, // o config.get('DB_URL')
         autoLoadEntities: true,
         synchronize: false,
+        ssl: {
+          rejectUnauthorized: false,
+        },
       }),
     }),
+
 
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'uploads'),
