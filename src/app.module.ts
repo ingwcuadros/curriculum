@@ -35,7 +35,7 @@ import typeorm from './config/typeorm';
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         type: 'postgres',
-        url: process.env.DB_URL, // o config.get('DB_URL')
+        url: process.env.DB_URL,
         autoLoadEntities: true,
         synchronize: false,
         ssl: {
