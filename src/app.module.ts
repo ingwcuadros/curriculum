@@ -14,6 +14,7 @@ import { PdfModule } from './pdf/pdf.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { RedisModule } from './redis/redis.module';
+import { ContactModule } from './contact/contact.module';
 import typeorm from './config/typeorm';
 
 
@@ -60,6 +61,7 @@ import typeorm from './config/typeorm';
     UsersModule,
     AuthModule,
     RedisModule,
+    ContactModule,
 
   ],
   controllers: [],
