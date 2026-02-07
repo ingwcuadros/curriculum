@@ -26,7 +26,7 @@ export class PdfService {
     const uniqueName = `${randomUUID()}-${file.originalname}`;
     file.originalname = uniqueName;
 
-    const filePath = await this.storageService.upload(file);
+    const filePath = await this.storageService.upload(file, true);
 
     const pdf = this.pdfRepo.create({
       fileName: dto.fileName,
@@ -49,7 +49,7 @@ export class PdfService {
 
       const uniqueName = `${randomUUID()}-${file.originalname}`;
       file.originalname = uniqueName;
-      pdf.filePath = await this.storageService.upload(file);
+      pdf.filePath = await this.storageService.upload(file, true);
     }
 
     if (dto.fileName) pdf.fileName = dto.fileName;
@@ -64,7 +64,7 @@ export class PdfService {
 
     const oldFileName = extractFileName(pdf.filePath);
     if (oldFileName) {
-      await this.storageService.delete(oldFileName);
+      await this.storageService.delete(oldFileName, true);
     }
 
     return this.pdfRepo.remove(pdf);

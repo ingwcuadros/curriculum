@@ -21,4 +21,8 @@ export class CreateBannerTranslationDto {
     @IsString()
     @IsNotEmpty()
     altImage: string;
+
+    @IsString()
+    @IsNotEmpty()
+    role: string;
 }

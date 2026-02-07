@@ -1,5 +1,5 @@
 
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Banner } from './entities/banner.entity';
@@ -34,6 +34,13 @@ export class BannersService {
   async deleteBanner(id: string) {
     const banner = await this.bannerRepo.findOne({ where: { id } });
     if (!banner) throw new NotFoundException(`Banner ${id} not found`);
+    if (banner.image) {
+      const oldFileName = extractFileName(banner.image);
+      if (oldFileName) {
+        console.log(oldFileName);
+        await this.storageService.delete(oldFileName, false);
+      }
+    }
     await this.bannerRepo.remove(banner);
   }
 
@@ -95,6 +102,7 @@ export class BannersService {
       textBanner: translation.textBanner,
       altImage: translation.altImage,
       image: translation.banner.image,
+      role: translation.role,
       tags: tagTranslations
     };
   }
@@ -124,14 +132,20 @@ export class BannersService {
     if (banner.image) {
       const oldFileName = extractFileName(banner.image);
       if (oldFileName) {
-        await this.storageService.delete(oldFileName);
+        console.log(oldFileName);
+        await this.storageService.delete(oldFileName, false);
       }
     }
+
+    if (!file) {
+      throw new BadRequestException('No se recibió ningún archivo');
+    }
+
     // Generar nombre único para la nueva imagen
     const uniqueName = `${randomUUID()}-${file.originalname}`;
     file.originalname = uniqueName; // Sobrescribimos para que el StorageService lo use
     // Subir la nueva imagen (local o S3 según STORAGE_DRIVER)
-    const newImagePath = await this.storageService.upload(file);
+    const newImagePath = await this.storageService.upload(file, false);
     // Actualizar el banner con la nueva ruta
     banner.image = newImagePath;
     return this.bannerRepo.save(banner);

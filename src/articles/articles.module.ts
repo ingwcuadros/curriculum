@@ -8,9 +8,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Tag } from '../tags/entities/tag.entity';
 import { Category } from '../categories/entities/category.entity';
 import { StorageModule } from '../comon/storage/storage.module';
+import { RedisModule } from '../redis/redis.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Article, ArticleTranslation, Language, Tag, Category]), StorageModule],
+  imports: [TypeOrmModule.forFeature([Article, ArticleTranslation, Language, Tag, Category]), StorageModule, RedisModule],
   controllers: [ArticlesController],
   providers: [ArticlesService],
 })

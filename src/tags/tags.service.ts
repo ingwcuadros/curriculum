@@ -65,10 +65,8 @@ export class TagsService {
       });
 
       return translations.map(t => ({
-        tagId: t.tag.id,
-        name: t.name,
-        description: t.description,
-        language: t.language.code,
+        id: t.tag.id,
+        name: t.name
       }));
     } catch (error) {
       this.logger.error(error)

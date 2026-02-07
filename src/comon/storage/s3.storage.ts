@@ -21,22 +21,24 @@ export class S3Storage implements StorageDriver {
         });
     }
 
-    async upload(file: Express.Multer.File): Promise<string> {
+    async upload(file: Express.Multer.File, isPdf: boolean): Promise<string> {
+        const key = isPdf ? `pdfs/${file.originalname}` : `imagenes/${file.originalname}`;
         const command = new PutObjectCommand({
             Bucket: this.bucket,
-            Key: file.originalname,
+            Key: key,
             Body: file.buffer,
             ContentType: file.mimetype,
         });
 
         await this.s3.send(command);
-        return `https://${this.bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${file.originalname}`;
+        return `https://${this.bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
     }
 
-    async delete(filePath: string): Promise<void> {
+    async delete(filePath: string, isPdf: boolean): Promise<void> {
+        const key = isPdf ? `pdfs/${filePath}` : `imagenes/${filePath}`;
         const command = new DeleteObjectCommand({
             Bucket: this.bucket,
-            Key: filePath,
+            Key: key,
         });
 
         await this.s3.send(command);
