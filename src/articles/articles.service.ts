@@ -272,13 +272,17 @@ export class ArticlesService {
      * 3) IDs de artículos para la página actual (DISTINCT + LIMIT/OFFSET)
      *    Aquí es donde realmente se aplica la paginación en SQL.
      */
+
     const idsRows = await baseQb
       .clone()
-      .select('DISTINCT article.id', 'article_id')
-      .orderBy('translation.fecha', 'DESC') // orden estable: cambia al campo que prefieras
+      .select('article.id', 'article_id')
+      .addSelect('MAX(translation.fecha)', 'max_fecha')
+      .groupBy('article.id')
+      .orderBy('max_fecha', 'DESC')
       .skip((page - 1) * limit)
       .take(limit)
-      .getRawMany<{ article_id: number }>();
+      .getRawMany<{ article_id: number; max_fecha: Date }>();
+
 
     const articleIds = idsRows.map((row) => row.article_id);
 
