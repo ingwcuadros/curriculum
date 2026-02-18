@@ -262,12 +262,24 @@ export class ArticlesService {
       'categoryTranslation.name AS category_name',
       'tagTranslation.name AS tag_name',
     ]);
+    qb.orderBy('translation.fecha', 'DESC');
 
     qb.skip((page - 1) * limit).take(limit);
 
 
-    const rawResults = await qb.getRawMany();
-    const total = await qb.getCount();
+
+    // Clon para el conteo (misma query, sin paginación)
+    const countQb = qb.clone();
+
+    // Paginación solo en el QB original
+    qb.skip((page - 1) * limit).take(limit);
+
+    // Ejecutar ambas en paralelo
+    const [rawResults, total] = await Promise.all([
+      qb.getRawMany(),      // datos paginados
+      countQb.getCount(),   // total sin paginación
+    ]);
+
 
     const grouped = rawResults.reduce((acc, row) => {
       if (!acc[row.article_id]) {
