@@ -449,7 +449,7 @@ export class ArticlesService {
       take: 3, // ⬅️ Limita a 3 resultados
     });
 
-    return translations.map(t => ({
+    const articles = translations.map(t => ({
       id: t.article.id,
       title: t.titulo,
       url: t.url,
@@ -458,6 +458,8 @@ export class ArticlesService {
       auxiliaryContent: t.auxiliaryContent,
       image: t.article.image,
     }));
+
+    return { articles }
   }
 
 
