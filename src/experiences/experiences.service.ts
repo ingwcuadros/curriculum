@@ -113,6 +113,7 @@ export class ExperiencesService {
         url: articleTranslation ? articleTranslation.url : null,
         content: articleTranslation ? articleTranslation.content : null,
         period: inicio && fin ? `${inicio} - ${fin}` : inicio || fin || '',
+        promo: articleTranslation ? articleTranslation.promo : null,
         auxiliaryContent: articleTranslation ? articleTranslation.auxiliaryContent : null,
         tags: tagsTranslations,
       };
