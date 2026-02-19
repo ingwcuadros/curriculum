@@ -222,16 +222,37 @@ export class ArticlesService {
 
 
   async getPaginatedArticles(query: GetPaginatedArticlesDto) {
-    const { lang, page = 1, limit = 10, category, tags } = query;
+    const { lang, category, tags } = query;
 
+    // 1) Aseguramos números válidos para page y limit
+    const rawPage = query.page;
+    const rawLimit = query.limit;
+
+    const page = rawPage ? Number(rawPage) : 1;
+    const limit = rawLimit ? Number(rawLimit) : 2;
+
+    const validPage = Number.isFinite(page) && page > 0 ? page : 1;
+    const validLimit = Number.isFinite(limit) && limit > 0 ? limit : 2;
+
+    const skip = (validPage - 1) * validLimit;
+
+    // 2) Query base con filtros comunes (SIN paginación todavía)
     const baseQb = this.translationRepo
       .createQueryBuilder('translation')
       .leftJoin('translation.article', 'article')
       .leftJoin('article.category', 'category')
       .leftJoin('translation.tags', 'tag')
       .leftJoin('translation.language', 'language')
-      .leftJoin('category.translations', 'categoryTranslation', 'categoryTranslation.language_id = language.id')
-      .leftJoin('tag.translations', 'tagTranslation', 'tagTranslation.language_id = language.id')
+      .leftJoin(
+        'category.translations',
+        'categoryTranslation',
+        'categoryTranslation.language_id = language.id',
+      )
+      .leftJoin(
+        'tag.translations',
+        'tagTranslation',
+        'tagTranslation.language_id = language.id',
+      )
       .where('language.code = :lang', { lang });
 
     // Filtro por categoría
@@ -244,70 +265,68 @@ export class ArticlesService {
     // Filtro por tags
     if (tags) {
       const tagsArray = tags.split(',').map(t => t.trim());
-      baseQb.andWhere('LOWER(tagTranslation.name) IN (:...tags)', { tags: tagsArray });
+      baseQb.andWhere('LOWER(tagTranslation.name) IN (:...tags)', {
+        tags: tagsArray,
+      });
     }
 
+    // --------------------------------------------------------------------------
+    // 3) TOTAL de artículos distintos (COUNT lógico de artículos)
+    //    Usamos GROUP BY article.id para evitar problemas con DISTINCT
+    // --------------------------------------------------------------------------
+    const totalQb = baseQb.clone()
+      .select('article.id', 'article_id')
+      .groupBy('article.id');
 
-    /**
-         * 2) Total de artículos (COUNT DISTINCT article.id)
-         */
-    const totalRow = await baseQb
-      .clone()
-      .select('COUNT(DISTINCT article.id)', 'cnt')
-      .getRawOne<{ cnt: string }>();
-
-    const total = Number(totalRow?.cnt ?? 0);
+    const totalRows = await totalQb.getRawMany();
+    const total = totalRows.length; // número de artículos (no filas de join)
 
     if (total === 0) {
       return {
         items: [],
         total: 0,
-        page,
-        limit,
+        page: validPage,
+        limit: validLimit,
         totalPages: 0,
       };
     }
 
-    /**
-     * 3) IDs de artículos para la página actual (DISTINCT + LIMIT/OFFSET)
-     *    Aquí es donde realmente se aplica la paginación en SQL.
-     */
-
-    const idsRows = await baseQb
-      .clone()
+    // --------------------------------------------------------------------------
+    // 4) IDs de artículos para la página actual
+    //    - agrupamos por article.id
+    //    - usamos MAX(translation.fecha) para ordenar por la fecha más reciente
+    //    - aplicamos paginación con OFFSET/LIMIT
+    // --------------------------------------------------------------------------
+    const idsQb = baseQb.clone()
       .select('article.id', 'article_id')
       .addSelect('MAX(translation.fecha)', 'max_fecha')
       .groupBy('article.id')
-      .orderBy('max_fecha', 'DESC')
-      .skip((page - 1) * limit)
-      .take(limit)
-      .getRawMany<{ article_id: number; max_fecha: Date }>();
+      .orderBy('max_fecha', 'DESC')   // ordena por la fecha más reciente
+      .offset(skip)
+      .limit(validLimit);
 
+    const idRows = await idsQb.getRawMany();
+    const articleIds = idRows.map(r => r.article_id);
 
-    const articleIds = idsRows.map((row) => row.article_id);
-
-    if (!articleIds.length) {
-      // Página fuera de rango: no hay artículos aunque total > 0
+    if (articleIds.length === 0) {
       return {
         items: [],
         total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
+        page: validPage,
+        limit: validLimit,
+        totalPages: Math.ceil(total / validLimit),
       };
     }
 
-
-    /**
-         * 4) Traer datos completos solo para esos artículos
-         *    De nuevo usamos joins para categoría y tags, pero filtrando por articleIds.
-         */
+    // --------------------------------------------------------------------------
+    // 5) Traer datos completos SOLO para esos articleIds
+    // --------------------------------------------------------------------------
     const dataQb = this.translationRepo
       .createQueryBuilder('translation')
-      .innerJoin('translation.article', 'article')
+      .leftJoin('translation.article', 'article')
       .leftJoin('article.category', 'category')
       .leftJoin('translation.tags', 'tag')
-      .innerJoin('translation.language', 'language')
+      .leftJoin('translation.language', 'language')
       .leftJoin(
         'category.translations',
         'categoryTranslation',
@@ -319,63 +338,82 @@ export class ArticlesService {
         'tagTranslation.language_id = language.id',
       )
       .where('language.code = :lang', { lang })
-      .andWhere('article.id IN (:...articleIds)', { articleIds })
-      .orderBy('translation.fecha', 'DESC')
+      .andWhere('article.id IN (:...articleIds)', { articleIds });
+
+    // Reaplicamos filtros, por consistencia
+    if (category) {
+      dataQb.andWhere('LOWER(categoryTranslation.name) = LOWER(:category)', {
+        category: category.trim(),
+      });
+    }
+
+    if (tags) {
+      const tagsArray = tags.split(',').map(t => t.trim());
+      dataQb.andWhere('LOWER(tagTranslation.name) IN (:...tags)', {
+        tags: tagsArray,
+      });
+    }
+
+    // Seleccionamos los campos finales
+    dataQb
       .select([
         'article.id AS article_id',
         'article.image AS article_image',
+
         'translation.titulo AS translation_titulo',
         'translation.url AS translation_url',
-        'translation.altImage AS translation_alt_image',
+        'translation.altImage AS translation_alt_image',                // ajusta al nombre real de la propiedad
         'translation.content AS translation_content',
-        'translation.auxiliaryContent AS translation_auxiliary_content',
+        'translation.auxiliaryContent AS translation_auxiliary_content', // idem
         'translation.fecha AS translation_fecha',
         'translation.fechaEnd AS translation_fecha_end',
         'translation.promo AS translation_promo',
+
         'categoryTranslation.name AS category_name',
         'tagTranslation.name AS tag_name',
-      ]);
+      ])
+      .orderBy('translation.fecha', 'DESC');
 
     const rawResults = await dataQb.getRawMany();
 
-    /**
-         * 5) Agrupar por artículo para juntar los tags
-         */
-    const grouped = rawResults.reduce(
-      (acc: Record<number, any>, row: any) => {
-        if (!acc[row.article_id]) {
-          acc[row.article_id] = {
-            id: row.article_id,
-            titulo: row.translation_titulo,
-            url: row.translation_url,
-            content: row.translation_content,
-            altImage: row.translation_alt_image,
-            auxiliaryContent: row.translation_auxiliary_content,
-            fecha: row.translation_fecha,
-            fechaEnd: row.translation_fecha_end,
-            promo: row.translation_promo,
-            image: row.article_image,
-            category: row.category_name,
-            tags: [] as string[],
-          };
-        }
-        if (row.tag_name) {
-          acc[row.article_id].tags.push(row.tag_name);
-        }
-        return acc;
-      },
-      {},
-    );
+    // --------------------------------------------------------------------------
+    // 6) Agrupamos las filas por artículo y consolidamos tags
+    // --------------------------------------------------------------------------
+    const grouped = rawResults.reduce((acc, row) => {
+      if (!acc[row.article_id]) {
+        acc[row.article_id] = {
+          id: row.article_id,
+          titulo: row.translation_titulo,
+          url: row.translation_url,
+          content: row.translation_content,
+          altImage: row.translation_alt_image,
+          auxiliaryContent: row.translation_auxiliary_content,
+          fecha: row.translation_fecha,
+          fechaEnd: row.translation_fecha_end,
+          promo: row.translation_promo,
+          image: row.article_image,
+          category: row.category_name,
+          tags: [],
+        };
+      }
+      if (row.tag_name && !acc[row.article_id].tags.includes(row.tag_name)) {
+        acc[row.article_id].tags.push(row.tag_name);
+      }
+      return acc;
+    }, {} as Record<string, any>);
 
-    // Convertimos el objeto en array
-    const items = Object.values(grouped);
+    // Mantener los artículos ordenados por fecha DESC
+    const items = Object.values(grouped).sort(
+      (a: any, b: any) =>
+        new Date(b.fecha).getTime() - new Date(a.fecha).getTime(),
+    );
 
     return {
       items,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
+      total,                                // total de artículos distintos
+      page: validPage,
+      limit: validLimit,
+      totalPages: Math.ceil(total / validLimit),
     };
 
 
