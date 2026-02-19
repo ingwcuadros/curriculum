@@ -9,36 +9,37 @@ import { RolesGuard } from '../auth/roles.guard';
 import { Role } from '../auth/roles.enum';
 
 @Controller('categories')
-@UseGuards(JwtAuthGuard, RolesGuard)
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) { }
-
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPERADMIN)
   @Post()
   createCategory(@Body() dto: CreateCategoryDto) {
     return this.categoriesService.createCategory(dto);
   }
-
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPERADMIN)
   @Delete('categories/:categoryId')
   deleteCategory(@Param('categoryId') categoryId: string) {
     return this.categoriesService.deleteCategory(categoryId);
   }
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPERADMIN)
   @Post('translations')
   addTranslation(@Body() dto: CreateCategoryTranslationDto) {
     return this.categoriesService.addTranslation(dto);
   }
-  @Roles(Role.SUPERADMIN, Role.READER)
+
   @Get()
   getCategoriesByLanguage(@Query('lang') lang: string) {
     return this.categoriesService.getCategoriesByLanguage(lang);
   }
-  @Roles(Role.SUPERADMIN, Role.READER)
+
   @Get('/:categoryId')
   getCategoryWithTranslation(@Param('categoryId') categoryId: string, @Query('lang') lang: string) {
     return this.categoriesService.getCategoryWithTranslation(categoryId, lang);
   }
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPERADMIN)
   @Put('/:categoryId/translations')
   updateTranslationByCategoryAndLang(
@@ -48,6 +49,7 @@ export class CategoriesController {
   ) {
     return this.categoriesService.updateTranslationByCategoryAndLang(categoryId, lang, dto);
   }
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPERADMIN)
   @Delete('translations/:id')
   deleteTranslation(@Param('id') id: string) {

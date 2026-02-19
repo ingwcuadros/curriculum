@@ -13,10 +13,9 @@ import { RolesGuard } from '../auth/roles.guard';
 import { Role } from '../auth/roles.enum';
 
 @Controller('pdf')
-@UseGuards(JwtAuthGuard, RolesGuard)
 export class PdfController {
   constructor(private readonly pdfService: PdfService) { }
-
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPERADMIN)
   @Post()
   @UseInterceptors(FileInterceptor('file', pdfUploadOptions))
@@ -24,20 +23,19 @@ export class PdfController {
     if (!file) throw new BadRequestException('Debe subir un archivo PDF');
     return this.pdfService.create(dto, file);
   }
-
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPERADMIN)
   @Put(':id')
   @UseInterceptors(FileInterceptor('file', pdfUploadOptions))
   async update(@Param('id') id: string, @Body() dto: UpdatePdfDto, @UploadedFile() file?: Express.Multer.File) {
     return this.pdfService.update(id, dto, file);
   }
-
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPERADMIN)
   @Delete(':id')
   async delete(@Param('id') id: string) {
     return this.pdfService.delete(id);
   }
-  @Roles(Role.SUPERADMIN, Role.READER)
   @Get()
   async get() {
     return this.pdfService.get();

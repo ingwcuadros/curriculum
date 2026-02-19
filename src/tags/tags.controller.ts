@@ -11,41 +11,40 @@ import { Role } from '../auth/roles.enum';
 
 
 @Controller('tags')
-@UseGuards(JwtAuthGuard, RolesGuard)
 export class TagsController {
   constructor(private readonly tagsService: TagsService) { }
-
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPERADMIN)
   @Post()
   createTag(@Body() dto: CreateTagDto) {
     return this.tagsService.createTag(dto);
   }
-
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPERADMIN)
   @Delete('tags/:tagId')
   deleteTag(@Param('tagId') tagId: string) {
     return this.tagsService.deleteTag(tagId);
   }
-
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPERADMIN)
   @Post('translations')
   addTranslation(@Body() dto: CreateTagTranslationDto) {
     return this.tagsService.addTranslation(dto);
   }
 
-  @Roles(Role.SUPERADMIN, Role.READER)
+
   @Get()
   getTagsByLanguage(@Query('lang') lang: string) {
     return this.tagsService.getTagsByLanguage(lang);
   }
 
-  @Roles(Role.SUPERADMIN, Role.READER)
+
   @Get('/:tagId')
   getTagWithTranslation(@Param('tagId') tagId: string, @Query('lang') lang: string) {
     return this.tagsService.getTagWithTranslation(tagId, lang);
   }
 
-
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPERADMIN)
   @Put('/:tagId/translations')
   updateTranslationByTagAndLang(
@@ -55,7 +54,7 @@ export class TagsController {
   ) {
     return this.tagsService.updateTranslationByTagAndLang(tagId, lang, dto);
   }
-
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPERADMIN)
   @Delete('translations/:id')
   deleteTranslation(@Param('id') id: string) {

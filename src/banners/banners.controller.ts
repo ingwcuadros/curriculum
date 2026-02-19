@@ -11,57 +11,63 @@ import { RolesGuard } from '../auth/roles.guard';
 import { Role } from '../auth/roles.enum';
 
 @Controller('banners')
-@UseGuards(JwtAuthGuard, RolesGuard)
 export class BannersController {
   constructor(private readonly service: BannersService) { }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPERADMIN)
   @Post()
   createBanner() {
     return this.service.createBanner();
   }
-
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPERADMIN)
   @Delete('/:id')
   deleteBanner(@Param('id') id: string) {
     return this.service.deleteBanner(id);
   }
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPERADMIN)
   @Post('translations')
   addTranslation(@Body() dto: CreateBannerTranslationDto) {
     return this.service.addTranslation(dto);
   }
-  @Roles(Role.SUPERADMIN, Role.READER)
+
   @Get()
   getBannersByLanguage(@Query('lang') lang: string) {
     return this.service.getBannersByLanguage(lang);
   }
-  @Roles(Role.SUPERADMIN, Role.READER)
+
   @Get('/:id')
   getBannerWithTranslation(@Param('id') id: string, @Query('lang') lang: string) {
     return this.service.getBannerWithTranslation(id, lang);
   }
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPERADMIN)
   @Put('translations/:id')
   updateTranslation(@Param('id') id: string, @Body() dto: UpdateBannerTranslationDto) {
     return this.service.updateTranslation(id, dto);
   }
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPERADMIN)
   @Delete('translations/:id')
   deleteTranslation(@Param('id') id: string) {
     return this.service.deleteTranslation(id);
   }
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPERADMIN)
   @Post('/:id/image')
   @UseInterceptors(FileInterceptor('file'))
   uploadImage(@Param('id') id: string, @UploadedFile() file: Express.Multer.File) {
     return this.service.uploadImage(id, file);
   }
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPERADMIN)
   @Post('/:id/tags')
   addTagsToBanner(@Param('id') id: string, @Body() dto: { tagIds: string[] }) {
     return this.service.addTagsToBanner(id, dto.tagIds);
   }
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPERADMIN)
   @Delete('/:id/tags/:tagId')
   removeTagFromBanner(@Param('id') id: string, @Param('tagId') tagId: string) {
