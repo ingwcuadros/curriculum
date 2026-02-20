@@ -145,6 +145,22 @@ export class ArticlesService {
       return tagTranslation ? tagTranslation.name : null;
     }).filter(name => name !== null);
 
+    const qbtranslation = this.translationRepo.createQueryBuilder('translation')
+      .leftJoinAndSelect('translation.article', 'article')
+      .leftJoinAndSelect('translation.language', 'translationLang')
+      .where('article.id = :articleId', { articleId: translation.article.id })
+
+    const translations = await qbtranslation.getMany();
+    console.log('Translations for URL:', identifier, translations);
+    const languages = translations.map(t => t.language.code)
+    const slugs = translations.map(t => t.url)
+
+    const objectUrls = translations.reduce((acc, t) => {
+      acc[t.language.code] = t.url;
+      return acc;
+    }, {} as Record<string, string>);
+
+
     return {
       id: translation.article.id,
       idTranslation: translation.id,
@@ -157,6 +173,7 @@ export class ArticlesService {
       image: translation.article.image,
       categoria: categoryTranslation ? categoryTranslation.name : null,
       tags: tagTranslations,
+      translations: objectUrls,
     };
 
 
