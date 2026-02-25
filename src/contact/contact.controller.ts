@@ -30,23 +30,27 @@ import { CreateContactDto } from './dto/create-contact.dto';
 )
 export class ContactController {
   constructor(private readonly contactService: ContactService) { }
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPERADMIN, Role.READER)
   @Post()
   create(@Body() createContactDto: CreateContactDto) {
     return this.contactService.create(createContactDto);
   }
-  @Roles(Role.SUPERADMIN, Role.READER)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPERADMIN)
   @Get()
   findAll() {
     return this.contactService.findAll();
   }
-  @Roles(Role.SUPERADMIN, Role.READER)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPERADMIN)
   @Get(':id')
   findOne(@Param('id', new ParseUUIDPipe()) id: string,) {
     return this.contactService.findOne(id);
   }
 
-  @Roles(Role.SUPERADMIN, Role.READER)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPERADMIN)
   @Delete(':id')
   remove(@Param('id', new ParseUUIDPipe()) id: string,) {
     return this.contactService.remove(id);

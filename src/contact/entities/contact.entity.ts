@@ -12,6 +12,9 @@ export class Contact {
     id: string;
 
     @Column({ type: 'varchar', length: 255 })
+    name: string;
+
+    @Column({ type: 'varchar', length: 255 })
     email: string;
 
     @Column({ type: 'text' })
