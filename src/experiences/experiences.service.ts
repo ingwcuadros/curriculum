@@ -107,12 +107,20 @@ export class ExperiencesService {
       const inicio = formatYearMonth(articleTranslation?.fecha);
       const fin = formatYearMonth(articleTranslation?.fechaEnd);
 
+      // if both dates are present and equal, just show one value
+      let period = '';
+      if (inicio && fin) {
+        period = inicio === fin ? inicio : `${inicio} - ${fin}`;
+      } else {
+        period = inicio || fin || '';
+      }
+
       return {
         id: article.id,
         title: articleTranslation ? articleTranslation.titulo : null,
         url: articleTranslation ? articleTranslation.url : null,
         content: articleTranslation ? articleTranslation.content : null,
-        period: inicio && fin ? `${inicio} - ${fin}` : inicio || fin || '',
+        period,
         promo: articleTranslation ? articleTranslation.promo : null,
         auxiliaryContent: articleTranslation ? articleTranslation.auxiliaryContent : null,
         tags: tagsTranslations,
