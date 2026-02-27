@@ -107,10 +107,14 @@ export class ExperiencesService {
       const inicio = formatYearMonth(articleTranslation?.fecha);
       const fin = formatYearMonth(articleTranslation?.fechaEnd);
 
-      // if both dates are present and equal, just show one value
+      // if both dates are present and equal, show language-specific text
       let period = '';
       if (inicio && fin) {
-        period = inicio === fin ? inicio : `${inicio} - ${fin}`;
+        if (inicio === fin) {
+          period = lang === 'es' ? `${inicio} - Actualmente` : lang === 'en' ? `${inicio} - Current` : inicio;
+        } else {
+          period = `${inicio} - ${fin}`;
+        }
       } else {
         period = inicio || fin || '';
       }
