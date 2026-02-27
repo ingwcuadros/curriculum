@@ -21,7 +21,7 @@ import { RedisService } from '../redis/redis.service';
 export interface SitemapItem {
   path: string;      // "/es/slug" o "/es"
   lastmod?: string;  // ISO date string
-  type: 'home' | 'article';
+  type: 'home' | 'article' | 'contact';
 }
 
 // helper opcional para convertir fecha a ISO
@@ -502,7 +502,12 @@ export class ArticlesService {
       lastmod: new Date().toISOString(),
       type: 'home',
     };
-    return [homeItem, ...articleItems];
+    const contactItem: SitemapItem = {
+      path: `/${lang}/contact`,
+      lastmod: new Date().toISOString(),
+      type: 'contact',
+    };
+    return [homeItem, contactItem, ...articleItems];
   }
 
 
