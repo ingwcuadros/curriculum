@@ -17,7 +17,7 @@ export class PdfService {
     private readonly storageService: StorageService,
   ) { }
 
-  async create(dto: CreatePdfDto, file: Express.Multer.File) {
+  async create(dto: CreatePdfDto, file: Express.Multer.File, fileEn: Express.Multer.File) {
     const existing = await this.pdfRepo.find();
     if (existing.length > 0) {
       throw new BadRequestException('Solo se permite un registro. Elimine el existente para crear uno nuevo.');
@@ -28,18 +28,37 @@ export class PdfService {
 
     const filePath = await this.storageService.upload(file, true);
 
+    const uniqueNameEn = `${randomUUID()}-${fileEn.originalname}`;
+    fileEn.originalname = uniqueNameEn;
+
+    const filePathEn = await this.storageService.upload(fileEn, true);
+    console.log('Archivo PDF subido:', filePathEn);
+
+
     const pdf = this.pdfRepo.create({
       fileName: dto.fileName,
       metaKeywords: dto.metaKeywords,
       filePath,
+      filePathEn,
     });
 
     return this.pdfRepo.save(pdf);
   }
 
-  async update(id: string, dto: UpdatePdfDto, file?: Express.Multer.File) {
+  async update(id: string, dto: UpdatePdfDto, file?: Express.Multer.File, fileEn?: Express.Multer.File) {
     const pdf = await this.pdfRepo.findOne({ where: { id } });
     if (!pdf) throw new NotFoundException(`PDF ${id} no encontrado`);
+
+    if (fileEn) {
+      const oldFileNameEn = extractFileName(pdf.filePathEn);
+      if (oldFileNameEn) {
+        await this.storageService.delete(oldFileNameEn, true);
+      }
+
+      const uniqueNameEn = `${randomUUID()}-${fileEn.originalname}`;
+      fileEn.originalname = uniqueNameEn;
+      pdf.filePathEn = await this.storageService.upload(fileEn, true);
+    }
 
     if (file) {
       const oldFileName = extractFileName(pdf.filePath);

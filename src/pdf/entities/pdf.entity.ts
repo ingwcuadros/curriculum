@@ -14,4 +14,7 @@ export class PdfResource {
 
     @Column({ name: 'file_path' })
     filePath: string; // URL o ruta del PDF en el storage
+
+    @Column({ name: 'file_path_en' })
+    filePathEn: string; // URL o ruta del PDF en el storage
 }

@@ -1,8 +1,8 @@
 
 import {
-  Controller, Post, Put, Delete, Get, Param, Body, UploadedFile, UseInterceptors, BadRequestException, UseGuards
+  Controller, Post, Put, Delete, Get, Param, Body, UploadedFile, UploadedFiles, UseInterceptors, BadRequestException, UseGuards
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FileFieldsInterceptor } from '@nestjs/platform-express';
 import { PdfService } from './pdf.service';
 import { CreatePdfDto } from './dto/create-pdf.dto';
 import { UpdatePdfDto } from './dto/update-pdf.dto';
@@ -18,17 +18,50 @@ export class PdfController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPERADMIN)
   @Post()
-  @UseInterceptors(FileInterceptor('file', pdfUploadOptions))
-  async create(@Body() dto: CreatePdfDto, @UploadedFile() file: Express.Multer.File) {
-    if (!file) throw new BadRequestException('Debe subir un archivo PDF');
-    return this.pdfService.create(dto, file);
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'file', maxCount: 1 },
+        { name: 'fileEn', maxCount: 1 },
+      ],
+      pdfUploadOptions, // misma config que usabas antes
+    ),
+  )
+
+  async create(@Body() dto: CreatePdfDto, @UploadedFiles()
+  files: {
+    file?: Express.Multer.File[];
+    fileEn?: Express.Multer.File[];
+  },) {
+    if (!files.file || files.file.length === 0) throw new BadRequestException('Debe subir un archivo PDF');
+    if (!files.fileEn || files.fileEn.length === 0) throw new BadRequestException('Debe subir un archivo PDF en inglés');
+    return this.pdfService.create(dto, files.file[0], files.fileEn[0]);
   }
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPERADMIN)
   @Put(':id')
-  @UseInterceptors(FileInterceptor('file', pdfUploadOptions))
-  async update(@Param('id') id: string, @Body() dto: UpdatePdfDto, @UploadedFile() file?: Express.Multer.File) {
-    return this.pdfService.update(id, dto, file);
+
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'file', maxCount: 1 },
+        { name: 'fileEn', maxCount: 1 },
+      ],
+      pdfUploadOptions, // misma config que usabas antes
+    ),
+  )
+
+
+  async update(
+    @Param('id') id: string,
+    @Body() dto: UpdatePdfDto,
+    @UploadedFiles()
+    files: {
+      file?: Express.Multer.File[];
+      fileEn?: Express.Multer.File[];
+    },
+  ) {
+    return this.pdfService.update(id, dto, files.file?.[0], files.fileEn?.[0]);
   }
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPERADMIN)
