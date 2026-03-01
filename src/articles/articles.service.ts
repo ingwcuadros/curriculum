@@ -472,7 +472,7 @@ export class ArticlesService {
       url: t.url,
       content: t.content,
       altImage: t.altImage,
-      auxiliaryContent: t.auxiliaryContent,
+      promo: t.promo,
       image: t.article.image,
     }));
 
