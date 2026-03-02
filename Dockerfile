@@ -1,6 +1,6 @@
 
 # Etapa 1: Build
-FROM node:20-bullseye AS builder
+FROM node:20-alpine AS builder
 WORKDIR /app
 
 RUN apk add --no-cache python3 make g++
