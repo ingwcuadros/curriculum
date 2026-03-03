@@ -1,47 +1,26 @@
-# ---------- Etapa 1: Build ----------
-FROM node:20-bullseye AS build
+
+# Etapa 1: Build
+FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Rompe caché para forzar build limpio en Dockploy (cambia el valor si hace falta)
-ARG CACHE_BUST=2026-03-02-01
-RUN echo "CACHE_BUST=$CACHE_BUST"
+RUN apk add --no-cache python3 make g++
 
-# Habilita corepack para gestionar yarn/pnpm de forma estable
-RUN corepack enable
+COPY package.json yarn.lock ./
+COPY tsconfig*.json ./
+RUN yarn install 
 
-# Copia sólo los manifests para aprovechar caché de dependencias
-COPY package.json yarn.lock* pnpm-lock.yaml* package-lock.json* ./
-
-# Instala dependencias de DEV siguiendo lockfile
-RUN if [ -f yarn.lock ]; then yarn install --frozen-lockfile; \
-    elif [ -f pnpm-lock.yaml ]; then corepack prepare pnpm@latest --activate && pnpm install --frozen-lockfile; \
-    else npm ci; fi
-
-# Copia el resto del código
 COPY . .
+RUN yarn build && ls -la /app/dist
 
-# Compila (NestJS/TypeScript suele ser "build")
-RUN npm run build || yarn build || pnpm build
-
-# ---------- Etapa 2: Runtime ----------
-FROM node:20-bullseye AS runtime
+# Etapa 2: Producción
+FROM node:20-alpine
 WORKDIR /app
-ENV NODE_ENV=production
 
-# Rompe caché también aquí
-ARG CACHE_BUST=2026-03-02-01
-RUN echo "CACHE_BUST=$CACHE_BUST"
+COPY package.json yarn.lock ./
+RUN yarn install --production  && yarn cache clean
 
-# Copia manifiestos y reinstala solo producción
-COPY package.json yarn.lock* pnpm-lock.yaml* package-lock.json* ./
-RUN if [ -f yarn.lock ]; then yarn install --frozen-lockfile --production; \
-    elif [ -f pnpm-lock.yaml ]; then corepack enable && corepack prepare pnpm@latest --activate && pnpm install --frozen-lockfile --prod; \
-    else npm ci --omit=dev; fi
+COPY --from=builder /app/dist ./dist
 
-# Copia artefactos compilados
-COPY --from=build /app/dist ./dist
-
-# Crea carpeta de uploads si la app la usa
 RUN mkdir -p /app/uploads
 
 EXPOSE 3000
